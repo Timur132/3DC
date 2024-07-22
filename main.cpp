@@ -1,6 +1,6 @@
+#include <Eigen/Dense>
 #include <cmath>
 #include <ncursesw/curses.h>
-#include <Eigen/Dense>
 
 using namespace std;
 
@@ -64,10 +64,10 @@ void drawLine(Point2i from, Point2i to) {
 }
 
 void dda(Point2i from, Point2i to) {
-    int x0 = from[0];
-    int y0 = from[1];
-    int x1 = to[0];
-    int y1 = to[1];
+    int x0   = from[0];
+    int y0   = from[1];
+    int x1   = to[0];
+    int y1   = to[1];
     float dx = x1 - x0;
     float dy = y1 - y0;
     int step = max(abs(dx), abs(dy));
@@ -82,6 +82,15 @@ void dda(Point2i from, Point2i to) {
     }
 }
 
+void drawTri(Point2i* in) {
+    drawLine(in[0], in[1]);    
+    drawLine(in[1], in[2]);    
+    drawLine(in[2], in[0]);    
+    dda(in[0], in[1]);    
+    dda(in[1], in[2]);    
+    dda(in[2], in[0]);    
+}
+
 int main() {
     initscr();
     raw();
@@ -93,31 +102,35 @@ int main() {
     init_pair(2, COLOR_WHITE, COLOR_RED);
     attron(COLOR_PAIR(1));
 
-    int x = COLS / 2;
-    int y = LINES / 2;
-    Point2i center = {x, y};
+    Point2i center = {COLS / 2, LINES / 2};
+    Point2i points[3];
+    points[0] = center + Point2i{0, -5};
+    points[1] = center + Point2i{5, 5};
+    points[2] = center + Point2i{-5, 5};
+    int cur = 0;
 
     while (true) {
         clear();
-        printw("Current position: %i %i", x, y);
-
-        drawLine(center, {x, y});
-        dda(center, {x, y});
-
+        printw("(%i %i) (%i %i) (%i %i)", points[0][0], points[0][1],
+               points[1][0], points[1][1], points[2][0], points[2][1]);
+        drawTri(points);
         refresh();
 
         switch (getch()) {
             case KEY_UP:
-                y--;
+                points[cur][1]--;
                 break;
             case KEY_DOWN:
-                y++;
+                points[cur][1]++;
                 break;
             case KEY_LEFT:
-                x--;
+                points[cur][0]--;
                 break;
             case KEY_RIGHT:
-                x++;
+                points[cur][0]++;
+                break;
+            case ' ':
+                cur = (++cur) % 3;
                 break;
             case 'q':
                 goto end;
