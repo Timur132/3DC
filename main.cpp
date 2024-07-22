@@ -1,7 +1,11 @@
 #include <cmath>
 #include <ncursesw/curses.h>
+#include <Eigen/Dense>
 
 using namespace std;
+
+typedef Eigen::Vector2i Point2i;
+typedef Eigen::Vector3i Point3i;
 
 void _drawLineX(int x0, int y0, int x1, int y1) {
     int dx  = x1 - x0;
@@ -35,7 +39,11 @@ void _drawLineY(int x0, int y0, int x1, int y1) {
     }
 }
 
-void drawLine(int x0, int y0, int x1, int y1) {
+void drawLine(Point2i from, Point2i to) {
+    int x0 = from[0];
+    int y0 = from[1];
+    int x1 = to[0];
+    int y1 = to[1];
     if (abs(x0 - x1) > abs(y0 - y1)) {
         mvprintw(1, 0, "drawLineX ");
         if (x1 < x0) {
@@ -55,7 +63,11 @@ void drawLine(int x0, int y0, int x1, int y1) {
     }
 }
 
-void dda(int x0, int y0, int x1, int y1) {
+void dda(Point2i from, Point2i to) {
+    int x0 = from[0];
+    int y0 = from[1];
+    int x1 = to[0];
+    int y1 = to[1];
     float dx = x1 - x0;
     float dy = y1 - y0;
     int step = max(abs(dx), abs(dy));
@@ -68,7 +80,7 @@ void dda(int x0, int y0, int x1, int y1) {
         x += dx;
         y += dy;
     }
-} 
+}
 
 int main() {
     initscr();
@@ -83,13 +95,14 @@ int main() {
 
     int x = COLS / 2;
     int y = LINES / 2;
+    Point2i center = {x, y};
 
     while (true) {
         clear();
         printw("Current position: %i %i", x, y);
 
-        drawLine(COLS / 2, LINES / 2, x, y);
-        dda(COLS / 2, LINES / 2, x, y);
+        drawLine(center, {x, y});
+        dda(center, {x, y});
 
         refresh();
 

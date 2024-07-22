@@ -16,6 +16,9 @@ find_package(Curses REQUIRED)
 list(APPEND PROJECT_INC ${CURSES_INCLUDE_DIRS})
 list(APPEND PROJECT_LIB ${CURSES_LIBRARIES})
 
+find_package(Eigen3 REQUIRED)
+list(APPEND PROJECT_INC ${EIGEN3_INCLUDE_DIR})
+
 add_executable(${PROJECT_NAME} main.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INC})
