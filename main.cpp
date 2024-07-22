@@ -1,29 +1,110 @@
+#include <cmath>
 #include <ncursesw/curses.h>
 
 using namespace std;
+
+void _drawLineX(int x0, int y0, int x1, int y1) {
+    int dx  = x1 - x0;
+    int dy  = y1 - y0;
+    int inc = (dy > 0) ? 1 : -1;
+    dy      = abs(dy);
+    int D   = 2 * dy - dx;
+    for (; x0 <= x1; ++x0) {
+        mvaddch(y0, x0, '#');
+        if (D > 0) {
+            y0 += inc;
+            D -= 2 * dx;
+        }
+        D += 2 * dy;
+    }
+}
+
+void _drawLineY(int x0, int y0, int x1, int y1) {
+    int dx  = x1 - x0;
+    int dy  = y1 - y0;
+    int inc = (dx > 0) ? 1 : -1;
+    dx      = abs(dx);
+    int D   = 2 * dx - dy;
+    for (; y0 <= y1; ++y0) {
+        mvaddch(y0, x0, '#');
+        if (D > 0) {
+            x0 += inc;
+            D -= 2 * dy;
+        }
+        D += 2 * dx;
+    }
+}
+
+void drawLine(int x0, int y0, int x1, int y1) {
+    if (abs(x0 - x1) > abs(y0 - y1)) {
+        mvprintw(1, 0, "drawLineX ");
+        if (x1 < x0) {
+            printw("with swap");
+            swap(x0, x1);
+            swap(y0, y1);
+        }
+        _drawLineX(x0, y0, x1, y1);
+    } else {
+        mvprintw(1, 0, "drawLineY ");
+        if (y1 < y0) {
+            printw("with swap");
+            swap(x0, x1);
+            swap(y0, y1);
+        }
+        _drawLineY(x0, y0, x1, y1);
+    }
+}
+
+void dda(int x0, int y0, int x1, int y1) {
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    int step = max(abs(dx), abs(dy));
+    dx /= step;
+    dy /= step;
+    float x = x0;
+    float y = y0;
+    for (int i = 0; i <= step; ++i) {
+        mvchgat(y, x, 1, 0, 2, nullptr);
+        x += dx;
+        y += dy;
+    }
+} 
 
 int main() {
     initscr();
     raw();
     keypad(stdscr, true);
     noecho();
+    curs_set(0);
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_WHITE, COLOR_RED);
+    attron(COLOR_PAIR(1));
 
-    float angle = 0;
+    int x = COLS / 2;
+    int y = LINES / 2;
 
     while (true) {
         clear();
-        printw("Current angle: %0.1f", angle);
+        printw("Current position: %i %i", x, y);
 
-        int x = 
+        drawLine(COLS / 2, LINES / 2, x, y);
+        dda(COLS / 2, LINES / 2, x, y);
 
         refresh();
-        
+
         switch (getch()) {
             case KEY_UP:
-                angle += 0.5;
+                y--;
                 break;
             case KEY_DOWN:
-                angle -= 0.5;
+                y++;
+                break;
+            case KEY_LEFT:
+                x--;
+                break;
+            case KEY_RIGHT:
+                x++;
                 break;
             case 'q':
                 goto end;
@@ -32,7 +113,7 @@ int main() {
         }
     }
 
-    end:
+end:
     endwin();
     return 0;
 }
