@@ -45,17 +45,13 @@ void drawLine(Point2i from, Point2i to) {
     int x1 = to[0];
     int y1 = to[1];
     if (abs(x0 - x1) > abs(y0 - y1)) {
-        mvprintw(1, 0, "drawLineX ");
         if (x1 < x0) {
-            printw("with swap");
             swap(x0, x1);
             swap(y0, y1);
         }
         _drawLineX(x0, y0, x1, y1);
     } else {
-        mvprintw(1, 0, "drawLineY ");
         if (y1 < y0) {
-            printw("with swap");
             swap(x0, x1);
             swap(y0, y1);
         }
@@ -76,19 +72,23 @@ void dda(Point2i from, Point2i to) {
     float x = x0;
     float y = y0;
     for (int i = 0; i <= step; ++i) {
-        mvchgat(y, x, 1, 0, 2, nullptr);
+        // mvchgat(round(y), round(x), 1, 0, 2, nullptr);
+        mvaddch(round(y), round(x), '#');
         x += dx;
         y += dy;
     }
 }
 
-void drawTri(Point2i* in) {
-    drawLine(in[0], in[1]);    
-    drawLine(in[1], in[2]);    
-    drawLine(in[2], in[0]);    
-    dda(in[0], in[1]);    
-    dda(in[1], in[2]);    
-    dda(in[2], in[0]);    
+void drawTri(Point2i* in, bool useDDA = false) {
+    if (!useDDA) {
+        drawLine(in[0], in[1]);
+        drawLine(in[1], in[2]);
+        drawLine(in[2], in[0]);
+    } else {
+        dda(in[0], in[1]);
+        dda(in[1], in[2]);
+        dda(in[2], in[0]);
+    }
 }
 
 int main() {
@@ -100,20 +100,30 @@ int main() {
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_WHITE, COLOR_RED);
+    init_pair(3, COLOR_BLACK, COLOR_WHITE);
     attron(COLOR_PAIR(1));
 
     Point2i center = {COLS / 2, LINES / 2};
-    Point2i points[3];
-    points[0] = center + Point2i{0, -5};
-    points[1] = center + Point2i{5, 5};
+    Point2i points[4];
+    points[0] = center + Point2i{-5, -5};
+    points[1] = center + Point2i{5, -5};
     points[2] = center + Point2i{-5, 5};
-    int cur = 0;
+    points[3] = center + Point2i{5, 5};
+    int cur   = 0;
+    bool useDDA = false;
 
     while (true) {
         clear();
-        printw("(%i %i) (%i %i) (%i %i)", points[0][0], points[0][1],
-               points[1][0], points[1][1], points[2][0], points[2][1]);
-        drawTri(points);
+        printw(useDDA ? "DDA" : "Bresenham");
+        for (int i = 0; i < 4; ++i) {
+            if (i == cur) {
+                attron(COLOR_PAIR(3));
+            }
+            printw(" (%i %i)", points[i][0], points[i][1]);
+            attron(COLOR_PAIR(1));
+        }
+        drawTri(points, useDDA);
+        drawTri(points + 1, useDDA);
         refresh();
 
         switch (getch()) {
@@ -130,7 +140,10 @@ int main() {
                 points[cur][0]++;
                 break;
             case ' ':
-                cur = (++cur) % 3;
+                cur = (cur + 1) % 4;
+                break;
+            case '/':
+                useDDA = !useDDA;
                 break;
             case 'q':
                 goto end;
