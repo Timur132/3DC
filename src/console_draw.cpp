@@ -1,6 +1,14 @@
 #include "console_draw.h"
 #include <pdcurses/curses.h>
-#include <string>
+
+void print_matrix(Eigen::Matrix4f mat) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            printw("%.3f ", mat(i, j));
+        }
+        addch('\n');
+    }
+}
 
 int color_to_pair(CharColor color) {
     int br         = int(color.bg[0] * 1000) / COLOR_STEP;
@@ -34,6 +42,7 @@ void start_color_and_pairs() {
             init_extended_pair(j * USED_COLORS + i + 1, i, j);
         }
     }
+    attron(color_to_attr({0, 0, 0, 1, 1, 1}));
 }
 
 ScreenBuffer::ScreenBuffer(int width, int height) { resize(width, height); }
@@ -68,15 +77,15 @@ void ScreenBuffer::put(int x, int y, chtype ch) {
     put(x, y, ch, attr | COLOR_PAIR(colorPair));
 }
 
+void ScreenBuffer::put(int x, int y, chtype ch, CharColor color, attr_t attr) {
+    put(x, y, ch, attr | COLOR_PAIR(color_to_pair(color)));
+}
+
 void ScreenBuffer::put(int x, int y, chtype ch, attr_t attr) {
     if (x < 0 || x >= width || y < 0 || y >= height) {
         return;
     }
     buf[y][x] = ch | attr;
-}
-
-void ScreenBuffer::put(int x, int y, chtype ch, CharColor color, attr_t attr) {
-    put(x, y, ch, attr | COLOR_PAIR(color_to_pair(color)));
 }
 
 void ScreenBuffer::draw_line(Point2i from, Point2i to, char ch) {
@@ -123,8 +132,8 @@ void ScreenBuffer::draw_line(Point2i from, Point2i to, char ch) {
     }
 }
 
-void ScreenBuffer::draw_tri(Point2i* in, char ch) {
-    draw_line(in[0], in[1], ch);
-    draw_line(in[1], in[2], ch);
-    draw_line(in[2], in[0], ch);
+void ScreenBuffer::draw_tri(Point2i a, Point2i b, Point2i c, char ch) {
+    draw_line(a, b, ch);
+    draw_line(a, c, ch);
+    draw_line(b, c, ch);
 }

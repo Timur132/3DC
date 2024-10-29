@@ -1,3 +1,5 @@
+#pragma once
+
 #include "common_types.h"
 #include <pdcurses/curses.h>
 #include <vector>
@@ -7,6 +9,7 @@
 #define USED_COLORS (COLOR_DEPTH * COLOR_DEPTH * COLOR_DEPTH)
 #define COLOR_STEP (1000 / (COLOR_DEPTH - 1))
 
+void print_matrix(Eigen::Matrix4f mat);
 void start_color_and_pairs();
 int color_to_pair(CharColor color);
 attr_t color_to_attr(CharColor color);
@@ -30,6 +33,6 @@ public:
     void put(int x, int y, chtype ch, CharColor color, attr_t attr);
     void set_color(CharColor color);
     void set_attr(attr_t attr);
-    void draw_tri(Point2i* in, char ch);
+    void draw_tri(Point2i a, Point2i b, Point2i c, char ch);
     void draw_line(Point2i from, Point2i to, char ch);
 };
